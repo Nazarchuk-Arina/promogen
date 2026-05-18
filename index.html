@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromoGen — Генератор промокодов</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Tokens ────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #141720;
+      --surface2:  #1c2030;
+      --border:    #2a2f42;
+      --border2:   #3a4060;
+      --accent:    #5b7fff;
+      --accent2:   #8fabff;
+      --success:   #2ecc71;
+      --danger:    #e74c3c;
+      --warning:   #f39c12;
+      --text:      #e8ecf5;
+      --muted:     #8892aa;
+      --mono:      'JetBrains Mono', monospace;
+      --sans:      'Manrope', sans-serif;
+      --radius:    10px;
+      --radius-lg: 16px;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .logo {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent2);
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--muted); font-weight: 400; }
+    .header-stats {
+      margin-left: auto;
+      display: flex;
+      gap: 1.5rem;
+    }
+    .stat-pill {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .stat-pill strong { color: var(--text); font-size: 0.85rem; }
+
+    /* ── Layout ──────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 0;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem;
+      gap: 2rem;
+    }
+
+    /* ── Panel / Card ────────────────────────────────────── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+    .panel-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Form Controls ───────────────────────────────────── */
+    .field { margin-bottom: 1rem; }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.3px;
+    }
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      padding: 0.6rem 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+    input[type="number"] { font-family: var(--mono); }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .checkbox-row span { font-size: 0.85rem; color: var(--text); }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      padding: 0.65rem 1.1rem;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+      margin-top: 0.25rem;
+      font-size: 0.9rem;
+      padding: 0.75rem;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-sm {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.75rem;
+      padding: 0.35rem 0.65rem;
+    }
+    .btn-sm:hover { color: var(--text); border-color: var(--border2); }
+    .btn-danger-sm {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-size: 0.75rem;
+      padding: 0.35rem 0.65rem;
+    }
+    .btn-danger-sm:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* ── Right column ─────────────────────────────────────── */
+    .right-col { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    /* ── Validator ────────────────────────────────────────── */
+    .validator-input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .validator-input-row input { flex: 1; font-family: var(--mono); font-size: 0.95rem; }
+    .validator-input-row .btn { white-space: nowrap; background: var(--accent); color: #fff; }
+
+    .validation-result {
+      margin-top: 0.85rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      display: none;
+    }
+    .validation-result.success {
+      background: rgba(46,204,113,0.08);
+      border: 1px solid rgba(46,204,113,0.3);
+      color: var(--success);
+      display: block;
+    }
+    .validation-result.error {
+      background: rgba(231,76,60,0.08);
+      border: 1px solid rgba(231,76,60,0.3);
+      color: var(--danger);
+      display: block;
+    }
+    .validation-result .vr-title { font-weight: 700; margin-bottom: 0.3rem; font-size: 0.9rem; }
+    .validation-result .vr-meta { color: var(--muted); margin-top: 0.35rem; font-size: 0.78rem; }
+    .validation-result .vr-meta span { color: var(--text); font-family: var(--mono); }
+
+    /* ── Codes Table ──────────────────────────────────────── */
+    .codes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .code-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .code-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.6rem 0.85rem;
+      transition: border-color 0.15s;
+    }
+    .code-row:hover { border-color: var(--border2); }
+    .code-text {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent2);
+      letter-spacing: 1px;
+    }
+    .code-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-discount { background: rgba(91,127,255,0.15); color: var(--accent2); }
+    .badge-free     { background: rgba(46,204,113,0.15); color: var(--success); }
+    .badge-trial    { background: rgba(243,156,18,0.12); color: var(--warning); }
+    .uses-bar { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+    /* ── Empty State ──────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .empty-state .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+    /* ── Toast ────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-size: 0.82rem;
+      padding: 0.65rem 1rem;
+      border-radius: var(--radius);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.2s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Tabs ─────────────────────────────────────────────── */
+    .tabs { display: flex; gap: 0.25rem; margin-bottom: 1.25rem; }
+    .tab {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--muted);
+      border: 1px solid transparent;
+      background: none;
+      transition: all 0.15s;
+    }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tab:not(.active):hover { color: var(--text); border-color: var(--border); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Scrollable list ──────────────────────────────────── */
+    .code-list-wrap { max-height: 340px; overflow-y: auto; padding-right: 2px; }
+    .code-list-wrap::-webkit-scrollbar { width: 4px; }
+    .code-list-wrap::-webkit-scrollbar-track { background: transparent; }
+    .code-list-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────── -->
+<header class="header">
+  <div class="logo">Promo<span>Gen</span></div>
+  <div class="header-stats">
+    <div class="stat-pill">Активно: <strong id="stat-active">0</strong></div>
+    <div class="stat-pill">Использовано: <strong id="stat-used">0</strong></div>
+    <div class="stat-pill">Всего создано: <strong id="stat-total">0</strong></div>
+  </div>
+</header>
+
+<!-- ── Main ───────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- ── Left: Generator ─────────────────────────────────── -->
+  <aside>
+    <div class="panel">
+      <div class="panel-title">⚡ Генератор</div>
+
+      <div class="field">
+        <label>Тип промокода</label>
+        <select id="code-type">
+          <option value="discount">Скидка (%)</option>
+          <option value="fixed">Фиксированная скидка (₽)</option>
+          <option value="free">Бесплатная доставка</option>
+          <option value="trial">Пробный период</option>
+        </select>
+      </div>
+
+      <div class="field" id="field-value">
+        <label id="value-label">Размер скидки (%)</label>
+        <input type="number" id="code-value" value="10" min="1" max="100" />
+      </div>
+
+      <div class="field">
+        <label>Префикс (необязательно)</label>
+        <input type="text" id="code-prefix" placeholder="Например: SUMMER" maxlength="8" />
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Длина кода</label>
+          <input type="number" id="code-length" value="8" min="4" max="16" />
+        </div>
+        <div class="field">
+          <label>Количество</label>
+          <input type="number" id="code-count" value="5" min="1" max="50" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Макс. использований (на 1 код)</label>
+        <input type="number" id="max-uses" value="1" min="1" max="9999" />
+      </div>
+
+      <div class="field">
+        <label>Символы</label>
+        <div class="checkbox-row">
+          <input type="checkbox" id="use-letters" checked />
+          <span>Буквы (A–Z)</span>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="use-digits" checked />
+          <span>Цифры (0–9)</span>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="avoid-similar" checked />
+          <span>Исключить похожие (0, O, 1, I, l)</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generateCodes()">
+        ✦ Сгенерировать коды
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Right: Validator + List ─────────────────────────── -->
+  <div class="right-col">
+
+    <!-- Validator -->
+    <div class="panel">
+      <div class="panel-title">🔍 Валидатор</div>
+      <div class="validator-input-row">
+        <input type="text" id="validate-input" placeholder="Введите промокод…"
+               style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"
+               onkeydown="if(event.key==='Enter') validateCode()" />
+        <button class="btn" onclick="validateCode()">Проверить</button>
+      </div>
+      <div class="validation-result" id="vr"></div>
+    </div>
+
+    <!-- Code List with Tabs -->
+    <div class="panel" style="flex:1">
+      <div class="codes-header">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('all', this)">Все</button>
+          <button class="tab" onclick="switchTab('active', this)">Активные</button>
+          <button class="tab" onclick="switchTab('used', this)">Использованные</button>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-sm" onclick="exportCSV()">↓ CSV</button>
+          <button class="btn btn-danger-sm" onclick="clearAll()">✕ Очистить</button>
+        </div>
+      </div>
+
+      <div class="code-list-wrap">
+        <div class="code-list" id="code-list">
+          <div class="empty-state">
+            <div class="icon">🎟</div>
+            Сгенерируйте коды, чтобы увидеть их здесь
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+const state = {
+  codes: [],          // { code, type, value, maxUses, usedCount, createdAt }
+  activeTab: 'all',
+};
+
+// ── Helpers ────────────────────────────────────────────────
+const SIMILAR_CHARS = new Set(['0','O','1','I','l']);
+const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';  // already filtered some
+const LETTERS_FULL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const DIGITS = '23456789';
+const DIGITS_FULL = '0123456789';
+
+function buildAlphabet(useLetters, useDigits, avoidSimilar) {
+  let alpha = '';
+  if (useLetters) alpha += avoidSimilar ? LETTERS : LETTERS_FULL;
+  if (useDigits)  alpha += avoidSimilar ? DIGITS  : DIGITS_FULL;
+  if (!alpha) alpha = LETTERS;  // fallback
+  return alpha;
+}
+
+function randomCode(prefix, length, alphabet) {
+  const bodyLen = Math.max(length - prefix.length, 4);
+  let code = prefix;
+  for (let i = 0; i < bodyLen; i++) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return code;
+}
+
+function typeLabel(type) {
+  return { discount: 'Скидка', fixed: 'Фикс.скидка', free: 'Бесп.доставка', trial: 'Пробный' }[type] || type;
+}
+function typeBadgeClass(type) {
+  return { discount: 'badge-discount', fixed: 'badge-discount', free: 'badge-free', trial: 'badge-trial' }[type] || '';
+}
+function typeValueLabel(type, value) {
+  if (type === 'discount') return `${value}%`;
+  if (type === 'fixed')    return `−${value}₽`;
+  if (type === 'free')     return 'Бесплатно';
+  if (type === 'trial')    return `${value} дн.`;
+  return '';
+}
+
+// ── Generate ───────────────────────────────────────────────
+function generateCodes() {
+  const type    = document.getElementById('code-type').value;
+  const value   = parseInt(document.getElementById('code-value').value) || 10;
+  const prefix  = document.getElementById('code-prefix').value.trim().toUpperCase();
+  const length  = Math.min(Math.max(parseInt(document.getElementById('code-length').value) || 8, 4), 16);
+  const count   = Math.min(Math.max(parseInt(document.getElementById('code-count').value) || 5, 1), 50);
+  const maxUses = Math.min(Math.max(parseInt(document.getElementById('max-uses').value) || 1, 1), 9999);
+  const useLetters  = document.getElementById('use-letters').checked;
+  const useDigits   = document.getElementById('use-digits').checked;
+  const avoidSim    = document.getElementById('avoid-similar').checked;
+
+  const alphabet = buildAlphabet(useLetters, useDigits, avoidSim);
+  const existing = new Set(state.codes.map(c => c.code));
+  const newCodes = [];
+  let attempts = 0;
+
+  while (newCodes.length < count && attempts < count * 20) {
+    attempts++;
+    const code = randomCode(prefix, length, alphabet);
+    if (!existing.has(code)) {
+      existing.add(code);
+      newCodes.push({
+        code,
+        type,
+        value,
+        maxUses,
+        usedCount: 0,
+        createdAt: Date.now(),
+      });
+    }
+  }
+
+  state.codes.unshift(...newCodes);
+  renderList();
+  updateStats();
+  toast(`✦ Сгенерировано ${newCodes.length} кодов`);
+}
+
+// ── Validate ───────────────────────────────────────────────
+function validateCode() {
+  const input = document.getElementById('validate-input').value.trim().toUpperCase();
+  const vr = document.getElementById('vr');
+
+  if (!input) { vr.className = 'validation-result'; return; }
+
+  const entry = state.codes.find(c => c.code === input);
+
+  if (!entry) {
+    vr.className = 'validation-result error';
+    vr.innerHTML = `<div class="vr-title">✗ Код не найден</div>
+      Промокод <span style="font-family:var(--mono)">${input}</span> не существует в базе.`;
+    return;
+  }
+
+  const exhausted = entry.usedCount >= entry.maxUses;
+
+  if (exhausted) {
+    vr.className = 'validation-result error';
+    vr.innerHTML = `<div class="vr-title">✗ Код исчерпан</div>
+      Достигнут лимит использований: ${entry.usedCount}/${entry.maxUses}.`;
+    return;
+  }
+
+  // Mark as used
+  entry.usedCount++;
+  renderList();
+  updateStats();
+
+  vr.className = 'validation-result success';
+  vr.innerHTML = `
+    <div class="vr-title">✓ Код действителен</div>
+    Применена скидка: <strong>${typeLabel(entry.type)} — ${typeValueLabel(entry.type, entry.value)}</strong>
+    <div class="vr-meta">
+      Использований: <span>${entry.usedCount} / ${entry.maxUses}</span>
+      &nbsp;·&nbsp; Создан: <span>${new Date(entry.createdAt).toLocaleDateString('ru-RU')}</span>
+    </div>`;
+
+  document.getElementById('validate-input').value = '';
+}
+
+// ── Render ─────────────────────────────────────────────────
+function renderList() {
+  const list = document.getElementById('code-list');
+  let filtered = state.codes;
+
+  if (state.activeTab === 'active') {
+    filtered = filtered.filter(c => c.usedCount < c.maxUses);
+  } else if (state.activeTab === 'used') {
+    filtered = filtered.filter(c => c.usedCount >= c.maxUses);
+  }
+
+  if (!filtered.length) {
+    const msg = state.codes.length === 0
+      ? '🎟 Сгенерируйте коды, чтобы увидеть их здесь'
+      : (state.activeTab === 'used' ? '📭 Нет использованных кодов' : '📭 Все коды исчерпаны');
+    list.innerHTML = `<div class="empty-state"><div class="icon"></div>${msg}</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(entry => {
+    const exhausted = entry.usedCount >= entry.maxUses;
+    const exhaustedStyle = exhausted ? 'opacity:0.45;' : '';
+    return `
+      <div class="code-row" style="${exhaustedStyle}">
+        <span class="code-text">${entry.code}</span>
+        <span class="code-badge ${typeBadgeClass(entry.type)}">${typeLabel(entry.type)} ${typeValueLabel(entry.type, entry.value)}</span>
+        <span class="uses-bar">${entry.usedCount}/${entry.maxUses} исп.</span>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" onclick="copyCode('${entry.code}')" title="Копировать">⎘</button>
+          <button class="btn btn-danger-sm" onclick="deleteCode('${entry.code}')" title="Удалить">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  const total  = state.codes.length;
+  const used   = state.codes.filter(c => c.usedCount >= c.maxUses).length;
+  const active = total - used;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-used').textContent   = used;
+  document.getElementById('stat-total').textContent  = total;
+}
+
+// ── Actions ────────────────────────────────────────────────
+function copyCode(code) {
+  navigator.clipboard.writeText(code).then(() => toast(`📋 Скопировано: ${code}`));
+}
+
+function deleteCode(code) {
+  state.codes = state.codes.filter(c => c.code !== code);
+  renderList();
+  updateStats();
+  toast('Код удалён');
+}
+
+function clearAll() {
+  if (!state.codes.length) return;
+  if (!confirm('Удалить все коды?')) return;
+  state.codes = [];
+  renderList();
+  updateStats();
+  document.getElementById('vr').className = 'validation-result';
+}
+
+function switchTab(tab, btn) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function exportCSV() {
+  if (!state.codes.length) { toast('Нет кодов для экспорта'); return; }
+  const rows = [['Код','Тип','Значение','Макс.исп.','Использовано','Создан']];
+  state.codes.forEach(c => rows.push([
+    c.code, typeLabel(c.type), typeValueLabel(c.type, c.value),
+    c.maxUses, c.usedCount, new Date(c.createdAt).toLocaleDateString('ru-RU')
+  ]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'promocodes.csv';
+  a.click(); URL.revokeObjectURL(url);
+  toast('📥 CSV сохранён');
+}
+
+// ── Toast ──────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── Dynamic label for value field ─────────────────────────
+document.getElementById('code-type').addEventListener('change', function () {
+  const map = {
+    discount: ['Размер скидки (%)', true, 100],
+    fixed:    ['Размер скидки (₽)', true, 99999],
+    free:     ['(поле не используется)', false, 1],
+    trial:    ['Длительность (дней)', true, 365],
+  };
+  const [label, enabled, max] = map[this.value];
+  document.getElementById('value-label').textContent = label;
+  const inp = document.getElementById('code-value');
+  inp.disabled = !enabled;
+  inp.max = max;
+  inp.style.opacity = enabled ? '1' : '0.4';
+});
+</script>
+</body>
+</html>
