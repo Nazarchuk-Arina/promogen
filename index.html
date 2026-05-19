@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromoGen — Генератор промокодов</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header class="header">
+    <div class="logo">Promo<span>Gen</span></div>
+    <div class="header-stats">
+      <div class="stat-pill">Активно: <strong id="stat-active">0</strong></div>
+      <div class="stat-pill">Использовано: <strong id="stat-used">0</strong></div>
+      <div class="stat-pill">Всего создано: <strong id="stat-total">0</strong></div>
+    </div>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- ── Left: Generator ─────────────────────────────── -->
+    <aside>
+      <div class="panel">
+        <div class="panel-title">⚡ Генератор</div>
+
+        <div class="field">
+          <label>Тип промокода</label>
+          <select id="code-type">
+            <option value="discount">Скидка (%)</option>
+            <option value="fixed">Фиксированная скидка (₽)</option>
+            <option value="free">Бесплатная доставка</option>
+            <option value="trial">Пробный период</option>
+          </select>
+        </div>
+
+        <div class="field" id="field-value">
+          <label id="value-label">Размер скидки (%)</label>
+          <input type="number" id="code-value" value="10" min="1" max="100" />
+        </div>
+
+        <div class="field">
+          <label>Префикс (необязательно)</label>
+          <input type="text" id="code-prefix" placeholder="Например: SUMMER" maxlength="8" />
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Длина кода</label>
+            <input type="number" id="code-length" value="8" min="4" max="16" />
+          </div>
+          <div class="field">
+            <label>Количество</label>
+            <input type="number" id="code-count" value="5" min="1" max="50" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Макс. использований (на 1 код)</label>
+          <input type="number" id="max-uses" value="1" min="1" max="9999" />
+        </div>
+
+        <div class="field">
+          <label>Символы</label>
+          <div class="checkbox-row">
+            <input type="checkbox" id="use-letters" checked />
+            <span>Буквы (A–Z)</span>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="use-digits" checked />
+            <span>Цифры (0–9)</span>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="avoid-similar" checked />
+            <span>Исключить похожие (0, O, 1, I, l)</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="generateCodes()">
+          ✦ Сгенерировать коды
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Right: Validator + List ───────────────────────── -->
+    <div class="right-col">
+
+      <!-- Validator -->
+      <div class="panel">
+        <div class="panel-title">🔍 Валидатор</div>
+        <div class="validator-input-row">
+          <input
+            type="text"
+            id="validate-input"
+            placeholder="Введите промокод…"
+            style="text-transform:uppercase"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter') validateCode()"
+          />
+          <button class="btn" onclick="validateCode()">Проверить</button>
+        </div>
+        <div class="validation-result" id="vr"></div>
+      </div>
+
+      <!-- Code List with Tabs -->
+      <div class="panel" style="flex:1">
+        <div class="codes-header">
+          <div class="tabs">
+            <button class="tab active" onclick="switchTab('all', this)">Все</button>
+            <button class="tab" onclick="switchTab('active', this)">Активные</button>
+            <button class="tab" onclick="switchTab('used', this)">Использованные</button>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn btn-sm" onclick="exportCSV()">↓ CSV</button>
+            <button class="btn btn-danger-sm" onclick="clearAll()">✕ Очистить</button>
+          </div>
+        </div>
+
+        <div class="code-list-wrap">
+          <div class="code-list" id="code-list">
+            <div class="empty-state">
+              <div class="icon">🎟</div>
+              Сгенерируйте коды, чтобы увидеть их здесь
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
